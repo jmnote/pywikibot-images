@@ -9,6 +9,10 @@ permissions:
   contents: read
   packages: write
 
+concurrency:
+  group: pywikibot-images
+  cancel-in-progress: false
+  
 env:
   UPSTREAM_REPO: wikimedia/pywikibot
   IMAGE_NAME: pywikibot
@@ -19,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (optional)
-        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Decide latest upstream tag
         id: upstream
@@ -31,8 +35,7 @@ jobs:
           tags=$(
             git ls-remote --tags --refs "https://github.com/${UPSTREAM_REPO}.git" \
               | awk -F/ '{print $NF}' \
-              | grep -E '^v?[0-9]+\.[0-9]+\.[0-9]+$' \
-              | sed 's/^v//' \
+              | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
               | sort -V
           )
 
@@ -72,31 +75,46 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Check if tag already exists (GHCR)
+      - name: Check if tag already exists (GHCR + Docker Hub)
         id: exists
         shell: bash
         run: |
           set -euo pipefail
           tag="${{ steps.refs.outputs.tag }}"
-          img="${{ steps.refs.outputs.ghcr_base }}:${tag}"
 
-          if docker manifest inspect "$img" >/dev/null 2>&1; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-            echo "Already exists: $img"
+          ghcr_img="${{ steps.refs.outputs.ghcr_base }}:${tag}"
+          dhub_img="${{ steps.refs.outputs.dhub_base }}:${tag}"
+
+          ghcr_exists=false
+          dhub_exists=false
+
+          if docker manifest inspect "$ghcr_img" >/dev/null 2>&1; then
+            ghcr_exists=true
+            echo "GHCR already has: $ghcr_img"
           else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-            echo "Not found (will build): $img"
+            echo "GHCR missing: $ghcr_img"
           fi
 
-      - name: Set up Docker Buildx
-        if: steps.exists.outputs.exists != 'true'
-        uses: docker/setup-buildx-action@v3
+          if docker manifest inspect "$dhub_img" >/dev/null 2>&1; then
+            dhub_exists=true
+            echo "Docker Hub already has: $dhub_img"
+          else
+            echo "Docker Hub missing: $dhub_img"
+          fi
+
+          if [ "$ghcr_exists" = true ] && [ "$dhub_exists" = true ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Already exists on both registries. Skipping build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Missing on at least one registry. Will build & push."
+          fi
 
       - name: Build & push (Dockerfile)
         if: steps.exists.outputs.exists != 'true'
         uses: docker/build-push-action@v6
         with:
-          context: https://github.com/${{ env.UPSTREAM_REPO }}.git#refs/tags/v${{ steps.refs.outputs.tag }}
+          context: https://github.com/${{ env.UPSTREAM_REPO }}.git#refs/tags/${{ steps.refs.outputs.tag }}
           file: Dockerfile
           platforms: ${{ env.PLATFORMS }}
           push: true
@@ -108,7 +126,7 @@ jobs:
         if: steps.exists.outputs.exists != 'true'
         uses: docker/build-push-action@v6
         with:
-          context: https://github.com/${{ env.UPSTREAM_REPO }}.git#refs/tags/v${{ steps.refs.outputs.tag }}
+          context: https://github.com/${{ env.UPSTREAM_REPO }}.git#refs/tags/${{ steps.refs.outputs.tag }}
           file: Dockerfile-dev
           platforms: ${{ env.PLATFORMS }}
           push: true
