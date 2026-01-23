@@ -1,17 +1,18 @@
 # Unofficial Pywikibot Docker Image
 
-[![Build](https://github.com/jmnote/pywikibot/actions/workflows/build.yml/badge.svg)](https://github.com/jmnote/pywikibot/actions/workflows/build.yml)
+[![Build](https://github.com/jmnote/docker-pywikibot/actions/workflows/build.yml/badge.svg)](https://github.com/jmnote/docker-pywikibot/actions/workflows/build.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jmnote/pywikibot)](https://hub.docker.com/r/jmnote/pywikibot)
-[![GitHub Container Registry](https://img.shields.io/badge/GHCR-jmnote%2Fpywikibot-blue)](https://github.com/jmnote/pywikibot/pkgs/container/pywikibot)
+[![GitHub Container Registry](https://img.shields.io/badge/GHCR-jmnote%2Fpywikibot-blue)](https://github.com/jmnote/docker-pywikibot/pkgs/container/pywikibot)
 
-This repository automatically builds and pushes multi-architecture Docker images for [Pywikibot](https://www.mediawiki.org/wiki/Manual:Pywikibot) based on the upstream tags from [wikimedia/pywikibot](https://github.com/wikimedia/pywikibot).
+This repository provides the Docker build configuration for [Pywikibot](https://www.mediawiki.org/wiki/Manual:Pywikibot), automatically tracking upstream tags from [wikimedia/pywikibot](https://github.com/wikimedia/pywikibot).
 
-The build workflow runs daily to check for new semantic version tags (e.g., `X.Y.Z`) and pushes images to both **Docker Hub** and **GitHub Container Registry (GHCR)**.
+The build workflow checks for new semantic version tags (e.g., `X.Y.Z`) and pushes multi-architecture images to both **Docker Hub** and **GitHub Container Registry (GHCR)**.
 
-## Supported Architectures
+## Features
 
-- `linux/amd64`
-- `linux/arm64`
+- **Multi-Architecture:** Supports `linux/amd64` and `linux/arm64`.
+- **Automated Builds:** Syncs with upstream releases automatically.
+- **Semantic Versioning:** Provides `latest`, major (`X`), minor (`X.Y`), and patch (`X.Y.Z`) tags.
 
 ## Image Registries
 
