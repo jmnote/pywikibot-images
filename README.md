@@ -1,4 +1,4 @@
-# Unofficial Pywikibot Docker Image
+# Pywikibot Docker Image
 
 [![Build](https://github.com/jmnote/docker-pywikibot/actions/workflows/build.yml/badge.svg)](https://github.com/jmnote/docker-pywikibot/actions/workflows/build.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/jmnote/pywikibot)](https://hub.docker.com/r/jmnote/pywikibot)
