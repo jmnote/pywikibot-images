@@ -1,4 +1,4 @@
-name: Build & Push Pywikibot images
+name: Build
 
 on:
   schedule:
